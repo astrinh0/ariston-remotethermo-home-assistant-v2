@@ -537,7 +537,11 @@ class AristonHandler:
         self._console_handler.setLevel(self._logging_level)
         self._formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         self._console_handler.setFormatter(self._formatter)
-        self._LOGGER.addHandler(self._console_handler)
+        if not any(
+            isinstance(handler, logging.StreamHandler)
+            for handler in self._LOGGER.handlers
+        ):
+            self._LOGGER.addHandler(self._console_handler)
 
         if sensors:
             for sensor in sensors:
@@ -2112,6 +2116,11 @@ class AristonHandler:
         self._started = False
         self._timer_periodic_read.cancel()
         self._timer_queue_delay.cancel()
+        self._timer_set_delay.cancel()
+        if self._subscribed_thread is not None:
+            self._subscribed_thread.cancel()
+        if self._subscribed2_thread is not None:
+            self._subscribed2_thread.cancel()
 
         if self._login and self.available:
             self._request_get(

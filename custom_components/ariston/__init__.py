@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_SELECTOR,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import discovery
 
@@ -290,22 +291,20 @@ def setup(hass, config):
         entity_id = call.data.get(ATTR_ENTITY_ID, "")
 
         try:
-            domain = entity_id.split(".")[0]
-        except:
+            domain, device_id = entity_id.split(".", 1)
+        except ValueError:
             _LOGGER.warning("Invalid entity_id domain for Ariston")
             raise Exception("Invalid entity_id domain for Ariston")
         if domain.lower() not in {"climate", "water_heater"}:
             _LOGGER.warning("Invalid entity_id domain for Ariston")
             raise Exception("Invalid entity_id domain for Ariston")
-        try:
-            device_id = entity_id.split(".")[1]
-        except:
+        if not device_id:
             _LOGGER.warning("Invalid entity_id device for Ariston")
             raise Exception("Invalid entity_id device for Ariston")
 
         for api in api_list:
             api_name = api.name.replace(' ', '_').lower()
-            if re.search(f'{api_name}_zone[1-9]$', device_id.lower()) or api_name == device_id.lower():
+            if re.search(f'{re.escape(api_name)}_zone[1-9]$', device_id.lower()) or api_name == device_id.lower():
                 # climate entity is found
                 parameter_list = {}
 
@@ -340,10 +339,16 @@ def setup(hass, config):
 
                 api.ariston_api.set_http_data(**parameter_list)
                 return
-            raise Exception("Corresponding entity_id for Ariston not found")
-        return
+        raise Exception("Corresponding entity_id for Ariston not found")
 
     hass.services.register(DOMAIN, SERVICE_SET_DATA, set_ariston_data)
+
+    def stop_ariston(event):
+        """Stop all Ariston API workers on Home Assistant shutdown."""
+        for api in api_list:
+            api.ariston_api.stop()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_ariston)
 
     if not hass.data[DATA_ARISTON][DEVICES]:
         return False
