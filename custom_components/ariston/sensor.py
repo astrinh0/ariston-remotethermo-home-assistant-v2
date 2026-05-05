@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 
-from .const import param_zoned
+from .const import ariston_device_info, param_zoned
 from .const import (
     DATA_ARISTON,
     DEVICES,
@@ -310,6 +310,11 @@ class AristonSensor(Entity):
         return self._name
 
     @property
+    def device_info(self):
+        """Return device information."""
+        return ariston_device_info(self._api, self._signal_name)
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -366,10 +371,13 @@ class AristonSensor(Entity):
         """Return True if entity is available."""
         if self._sensor_type == PARAM_VERSION:
             return True
-        return (
-            self._api.available
-            and not self._api.sensor_values[self._sensor_type][VALUE] is None
-        )
+        try:
+            return (
+                self._api.available
+                and self._api.sensor_values[self._sensor_type][VALUE] is not None
+            )
+        except KeyError:
+            return False
 
 
     def update(self):
@@ -396,4 +404,4 @@ class AristonSensor(Entity):
                 self._attrs["state_class"] = self._state_class
 
         except KeyError:
-            _LOGGER.warning("Problem updating sensors for Ariston")
+            _LOGGER.debug("Sensor %s is not available for this Ariston device", self._sensor_type)

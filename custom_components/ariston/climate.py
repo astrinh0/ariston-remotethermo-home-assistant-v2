@@ -3,7 +3,7 @@ Adds support for the Ariston Boiler
 """
 import logging
 from datetime import timedelta
-from .const import param_zoned
+from .const import ariston_device_info, param_zoned
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -100,6 +100,11 @@ class AristonThermostat(ClimateEntity):
     def name(self):
         """Return the name of the Climate device."""
         return self._climate_name
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return ariston_device_info(self._api, self._name)
 
     @property
     def should_poll(self):

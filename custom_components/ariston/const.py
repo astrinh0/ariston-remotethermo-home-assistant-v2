@@ -187,3 +187,15 @@ def param_zoned(param, zone):
         return f'{param}_zone{zone}'
     else:
         return param
+
+
+def ariston_device_info(api, name):
+    """Return common Home Assistant device metadata for Ariston entities."""
+    return {
+        "identifiers": {(DOMAIN, name)},
+        "name": name,
+        "manufacturer": "Ariston",
+        "model": "Remote Thermo",
+        "sw_version": api.version,
+        "configuration_url": "https://www.ariston-net.remotethermo.com",
+    }

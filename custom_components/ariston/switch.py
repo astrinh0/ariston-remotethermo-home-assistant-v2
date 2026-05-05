@@ -4,7 +4,7 @@ from copy import deepcopy
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_SWITCHES, CONF_NAME
 
-from .const import param_zoned
+from .const import ariston_device_info, param_zoned
 from .const import (
     DATA_ARISTON,
     DEVICES,
@@ -68,6 +68,7 @@ class AristonSwitch(SwitchEntity):
         self._api = device.api.ariston_api
         self._icon = SWITCHES[switch_type][1]
         self._name = "{} {}".format(name, SWITCHES[switch_type][0])
+        self._signal_name = name
         self._switch_type = switch_type
         self._state = None
         self._device = device.device
@@ -86,6 +87,11 @@ class AristonSwitch(SwitchEntity):
     def name(self):
         """Return the name of this Switch device if any."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return ariston_device_info(self._api, self._signal_name)
 
     @property
     def icon(self):

@@ -118,8 +118,45 @@ You may read more about API (`ariston.py`) on the website: https://pypi.org/proj
   - Ariston Velis. use https://github.com/chomupashchuk/ariston-aqua-remotethermo-home-assistant instead.
   - Ariston Lydos Hybrid. use https://github.com/chomupashchuk/ariston-aqua-remotethermo-home-assistant instead.
 
-## How to check if intergation supports your model
-You may check possible support of your boiler by logging into https://www.ariston-net.remotethermo.com and if climate and water heater parts (like temperatures) are available on the home page, then intergation should potentially work.
+## How to check if integration supports your model
+You may check possible support for your Ariston product by logging into https://www.ariston-net.remotethermo.com. If heating, cooling, climate, or water-heater controls and temperatures are visible on the home page, then this integration should potentially work.
+
+## Recommended safe configuration
+Start with a small set of entities and add model-specific options only after the Ariston device is stable in Home Assistant. Some optional Ariston parameters are not exposed by every product and can make entities unavailable.
+
+```
+ariston:
+  username: !secret ariston_username
+  password: !secret ariston_password
+  name: Ariston
+  period_get: 60
+  period_set: 60
+  max_set_retries: 5
+  num_ch_zones: 1
+
+  sensors:
+    - mode
+    - ch_mode
+    - ch_detected_temperature
+    - ch_set_temperature
+    - dhw_set_temperature
+    - dhw_storage_temperature
+    - outside_temperature
+    - pressure
+    - errors_count
+    - signal_strength
+    - integration_version
+
+  binary_sensors:
+    - online
+    - changing_data
+    - flame
+    - ch_flame
+    - dhw_flame
+
+```
+
+Avoid enabling writable selectors and switches until the basic read-only entities are working. Also avoid `internet_weather`, `ch_water_temperature`, `dhw_comfort_temperature`, `dhw_economy_temperature`, and `dhw_mode` at first, because these are model-dependent.
 
 ## Integration installation
 In `/config` folder create `custom_components` folder and folder `ariston` with its contents in it.
@@ -266,7 +303,6 @@ ariston:
   password: !secret ariston_password
   switches:
     - internet_time
-    - internet_weather
   sensors:
     - ch_detected_temperature
     - ch_mode

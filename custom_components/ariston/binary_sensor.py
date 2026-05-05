@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 
-from .const import param_zoned
+from .const import ariston_device_info, param_zoned
 from .const import (
     DATA_ARISTON,
     DEVICES,
@@ -107,6 +107,7 @@ class AristonBinarySensor(BinarySensorEntity):
         self._device_class = BINARY_SENSORS[sensor_type][1]
         self._icon = BINARY_SENSORS[sensor_type][2]
         self._name = "{} {}".format(name, BINARY_SENSORS[sensor_type][0])
+        self._signal_name = name
         self._sensor_type = sensor_type
         self._state = None
 
@@ -131,6 +132,11 @@ class AristonBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
+    def device_info(self):
+        """Return device information."""
+        return ariston_device_info(self._api, self._signal_name)
+
+    @property
     def is_on(self):
         """Return if entity is on."""
         return self._state
@@ -148,10 +154,13 @@ class AristonBinarySensor(BinarySensorEntity):
         elif self._sensor_type == PARAM_CHANGING_DATA:
             return self._api.available
         else:
-            return (
-                self._api.available
-                and not self._api.sensor_values[self._sensor_type][VALUE] is None
-            )
+            try:
+                return (
+                    self._api.available
+                    and self._api.sensor_values[self._sensor_type][VALUE] is not None
+                )
+            except KeyError:
+                return False
 
     @property
     def icon(self):
@@ -173,4 +182,7 @@ class AristonBinarySensor(BinarySensorEntity):
                 else:
                     self._state = False
         except KeyError:
-            _LOGGER.warning("Problem updating binary_sensors for Ariston")
+            _LOGGER.debug(
+                "Binary sensor %s is not available for this Ariston device",
+                self._sensor_type,
+            )

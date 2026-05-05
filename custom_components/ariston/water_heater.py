@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 
 from .const import (
+    ariston_device_info,
     DATA_ARISTON,
     DEVICES,
     DOMAIN,
@@ -73,6 +74,11 @@ class AristonWaterHeater(WaterHeaterEntity):
     def name(self):
         """Return the name of the Climate device."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return ariston_device_info(self._api, self._name)
 
     @property
     def icon(self):
